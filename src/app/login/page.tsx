@@ -40,7 +40,7 @@ export default async function LoginPage({
         <div className="login-form-wrap">
           <span className="eyebrow">Private admin access</span>
           <h2>Welcome back</h2>
-          <p className="muted">Use the single administrator account created in Supabase.</p>
+          <p className="muted">Use an authorized account created in Supabase.</p>
           <Notice error={params.error} />
           <form action={loginAction} className="form-stack">
             <label className="field">
@@ -53,7 +53,15 @@ export default async function LoginPage({
             </label>
             <SubmitButton pendingText="Signing in…">Sign in</SubmitButton>
           </form>
-          <p className="microcopy">Public signup is disabled. Access is limited by ADMIN_EMAIL.</p>
+          <p className="microcopy">
+            Public signup is disabled. Access is limited by the administrator
+            and optional Meta reviewer allowlists.
+          </p>
+          <p className="microcopy">
+            <a className="text-link" href="/privacy">Privacy policy</a>
+            {" · "}
+            <a className="text-link" href="/data-deletion">Data deletion</a>
+          </p>
         </div>
       </section>
     </main>

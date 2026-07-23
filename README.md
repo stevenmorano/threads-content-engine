@@ -1,6 +1,6 @@
 # Threads Content Engine
 
-A private, single-admin Threads research workspace. The current interface uses the working product label **Signal Loom**. Phase 1 connects to Meta's official Threads API, searches public posts by keyword, stores and ranks discoveries, analyzes selected sources with OpenAI, generates original drafts, checks similarity, and holds every draft for manual review.
+A private Threads research workspace for one administrator, with an optional isolated reviewer account during Meta App Review. Phase 1 connects to Meta's official Threads API, searches public posts by keyword after Meta approval, stores and ranks discoveries, analyzes selected sources with OpenAI, generates original drafts, checks similarity, and holds every draft for manual review.
 
 Nothing in Phase 1 can publish or schedule a Threads post.
 
@@ -18,26 +18,30 @@ Nothing in Phase 1 can publish or schedule a Threads post.
 - Source provenance for every draft
 - Edit, regenerate, approve, reject, and save-for-later actions
 - Audit events for material workflow changes
+- Signed Meta deauthorization and data-deletion callbacks
+- Public privacy policy, deletion instructions, and deletion-status pages
+- Optional dedicated reviewer-email allowlist
 
-The research findings, API support matrix, architecture, schema rationale, phased roadmap, complete environment list, and Meta review notes are in [PROJECT_BLUEPRINT.md](./PROJECT_BLUEPRINT.md).
+The research findings, API support matrix, architecture, schema rationale, phased roadmap, complete environment list, and Meta review notes are in [PROJECT_BLUEPRINT.md](./PROJECT_BLUEPRINT.md). The submission checklist and copy-ready reviewer text are in [META_APP_REVIEW.md](./META_APP_REVIEW.md).
 
 ## Current setup status
 
-Verified locally on 2026-07-23:
+Verified on 2026-07-23:
 
 - the Phase 1 database migration has been applied to Supabase;
 - the one-admin Supabase user and email allowlist are configured;
 - local Supabase authentication, RLS-backed topic/keyword writes, and all dashboard routes work;
 - the Supabase project URL and publishable key are configured locally;
-- lint, TypeScript, six unit tests, the production build, and the high-severity dependency audit pass.
+- production OAuth connects `@adhdsteve` with the intended least-privilege scopes;
+- Meta's unapproved public-search boundary is surfaced as an actionable error;
+- lint, TypeScript, twelve unit tests, the production build, and the high-severity dependency audit pass.
 
 Still required before the full Phase 1 workflow can run:
 
-- create and configure the Meta app;
-- generate the Threads token-encryption key;
-- connect the administrator's Threads account;
-- add an OpenAI API key;
-- deploy to Vercel and register the production OAuth callback.
+- apply the App Review migration and configure the server-only Supabase secret;
+- configure the privacy contact and optional dedicated reviewer account;
+- submit `threads_basic` and `threads_keyword_search` for Meta App Review;
+- add an OpenAI API key after application-side usage limits are configured.
 
 See [CHANGELOG.md](./CHANGELOG.md) for the implementation history and [SECURITY.md](./SECURITY.md) for credential and reporting guidance.
 
@@ -45,7 +49,7 @@ See [CHANGELOG.md](./CHANGELOG.md) for the implementation history and [SECURITY.
 
 The official public keyword-search and media-object field lists do not expose numeric likes, replies, reposts, or quotes for arbitrary public posts. The post-insights endpoint documents those metrics for the authenticated user's own posts.
 
-Signal Loom therefore:
+Threads Content Engine therefore:
 
 - stores engagement metrics as nullable values;
 - never treats unavailable counts as zero;
@@ -80,7 +84,9 @@ Put the result in `THREADS_TOKEN_ENCRYPTION_KEY`.
 ## 2. Configure Supabase
 
 1. Create a Supabase project.
-2. Open the SQL editor and run [`supabase/migrations/202607230001_phase_1.sql`](./supabase/migrations/202607230001_phase_1.sql).
+2. Open the SQL editor and run these migrations in order:
+   - [`supabase/migrations/202607230001_phase_1.sql`](./supabase/migrations/202607230001_phase_1.sql)
+   - [`supabase/migrations/202607230002_meta_app_review.sql`](./supabase/migrations/202607230002_meta_app_review.sql)
 3. In **Authentication → Providers → Email**, enable email/password authentication.
 4. In **Authentication → Users**, create the one administrator manually.
 5. Set `ADMIN_EMAIL` to that exact email address.
@@ -90,6 +96,8 @@ Put the result in `THREADS_TOKEN_ENCRYPTION_KEY`.
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 
 Public signup is not exposed by the application.
+
+For Meta callbacks, create a dedicated `sb_secret_...` key in **Supabase → Settings → API Keys** and store it only as the server-side `SUPABASE_SECRET_KEY`. It bypasses RLS and must never be exposed to the browser.
 
 ## 3. Configure the Meta Threads app
 
@@ -115,6 +123,8 @@ https://YOUR-DOMAIN/api/threads/callback
 Do not request publishing or insights permissions until those later phases ship.
 
 For production use outside app roles, plan Meta App Review/advanced access for each requested permission. Confirm the exact requirements in **App Review → Permissions and Features**, and prepare a privacy policy, data-deletion instructions, reviewer account, use-case narrative, and permission-specific screen recording.
+
+Use [META_APP_REVIEW.md](./META_APP_REVIEW.md) for the exact production URLs, reviewer steps, permission explanations, and recording checklist.
 
 ## 4. Configure OpenAI
 
@@ -149,7 +159,11 @@ Approval is internal bookkeeping in Phase 1. It does not publish, schedule, or t
 | `NEXT_PUBLIC_APP_URL` | Yes | Yes |
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | Yes |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes | Yes |
+| `SUPABASE_SECRET_KEY` | App Review callbacks | No |
 | `ADMIN_EMAIL` | Yes | No |
+| `META_REVIEWER_EMAIL` | App Review | No |
+| `PRIVACY_CONTACT_EMAIL` | App Review | No |
+| `APP_OPERATOR_NAME` | Optional | No |
 | `THREADS_APP_ID` | Yes | No |
 | `THREADS_APP_SECRET` | Yes | No |
 | `THREADS_TOKEN_ENCRYPTION_KEY` | Yes | No |
@@ -157,7 +171,7 @@ Approval is internal bookkeeping in Phase 1. It does not publish, schedule, or t
 | `OPENAI_MODEL` | Optional | No |
 | `DRAFT_SIMILARITY_THRESHOLD` | Optional | No |
 
-The Supabase publishable key is intentionally browser-safe; database access is enforced through authenticated sessions and RLS. A Supabase secret/service-role key is not used in Phase 1.
+The Supabase publishable key is intentionally browser-safe; normal database access is enforced through authenticated sessions and RLS. The Supabase secret key is restricted to HMAC-verified Meta callbacks and server-rendered deletion-status lookups.
 
 ## Validation
 
@@ -169,7 +183,7 @@ npm run build
 npm audit --audit-level=high
 ```
 
-Unit tests cover missing-signal ranking behavior, engagement-aware ranking, and similarity detection.
+Unit tests cover missing-signal ranking behavior, engagement-aware ranking, similarity detection, Threads OAuth/search request shapes, and Meta signed-request verification.
 
 ## Troubleshooting
 

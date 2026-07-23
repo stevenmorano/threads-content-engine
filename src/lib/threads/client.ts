@@ -6,6 +6,7 @@ import {
 } from "@/lib/threads/types";
 
 const API_BASE = "https://graph.threads.net";
+const GRAPH_API_BASE = `${API_BASE}/v1.0`;
 const AUTH_BASE = "https://threads.net/oauth/authorize";
 const MEDIA_FIELDS = [
   "id",
@@ -113,7 +114,7 @@ export async function exchangeCodeForLongLivedToken(code: string) {
   const longToken = longTokenSchema.parse(await readApiResponse(longResponse));
 
   const profileParams = new URLSearchParams({ fields: "id,username,name" });
-  const profileResponse = await fetch(`${API_BASE}/me?${profileParams}`, {
+  const profileResponse = await fetch(`${GRAPH_API_BASE}/me?${profileParams}`, {
     headers: { Authorization: `Bearer ${longToken.access_token}` },
     cache: "no-store",
   });
@@ -138,7 +139,7 @@ export async function searchThreads(
     limit: String(limit),
     fields: MEDIA_FIELDS,
   });
-  const response = await fetch(`${API_BASE}/keyword_search?${params}`, {
+  const response = await fetch(`${GRAPH_API_BASE}/keyword_search?${params}`, {
     headers: { Authorization: `Bearer ${accessToken}` },
     cache: "no-store",
   });

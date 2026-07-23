@@ -25,9 +25,11 @@ Do not open a public issue containing credentials, tokens, personal data, or a r
 
 ## Application boundaries
 
-- Supabase Row Level Security and the `ADMIN_EMAIL` allowlist enforce the one-admin data boundary.
+- Supabase Row Level Security and the administrator/optional reviewer allowlists enforce isolated user data boundaries.
 - Stored Threads access tokens are encrypted with AES-256-GCM.
 - OAuth state validation protects the Threads callback against cross-site request forgery.
+- Meta deauthorization and deletion callbacks verify HMAC-SHA256 `signed_request` payloads before using the server-only Supabase secret.
+- The Supabase secret key is isolated to server modules and never uses a `NEXT_PUBLIC_*` name.
 - Generated drafts retain source provenance and pass a deterministic similarity gate.
 - Phase 1 contains no Threads publishing or scheduling path. An approved draft remains an internal editorial state.
 
@@ -35,6 +37,8 @@ Do not open a public issue containing credentials, tokens, personal data, or a r
 
 - Configure the canonical `NEXT_PUBLIC_APP_URL`.
 - Register the exact matching Threads OAuth callback.
+- Apply the App Review migration before enabling Meta's uninstall and deletion callbacks.
+- Configure a dedicated `SUPABASE_SECRET_KEY` and `PRIVACY_CONTACT_EMAIL`.
 - Store secrets in Vercel environment settings, not committed files.
 - Run `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, and `npm audit --audit-level=high`.
 - Confirm Meta permissions match only the features currently deployed.

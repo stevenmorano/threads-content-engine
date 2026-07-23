@@ -29,7 +29,10 @@ export default async function SettingsPage({
   const requiredConfiguration = [
     ["Supabase URL", Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL)],
     ["Supabase publishable key", Boolean(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)],
+    ["Supabase server secret", Boolean(process.env.SUPABASE_SECRET_KEY)],
     ["Admin allowlist", Boolean(process.env.ADMIN_EMAIL)],
+    ["Meta reviewer allowlist", Boolean(process.env.META_REVIEWER_EMAIL)],
+    ["Privacy contact", Boolean(process.env.PRIVACY_CONTACT_EMAIL)],
     ["Threads App ID", Boolean(process.env.THREADS_APP_ID)],
     ["Threads App Secret", Boolean(process.env.THREADS_APP_SECRET)],
     ["Token encryption key", Boolean(process.env.THREADS_TOKEN_ENCRYPTION_KEY)],
@@ -104,11 +107,17 @@ export default async function SettingsPage({
         </div>
         <div className="checklist-grid">
           <div><span>1</span><p>Create a Meta app with the <strong>Threads use case</strong> and add your account as an app role/tester during development.</p></div>
-          <div><span>2</span><p>Add this exact redirect URI: <code>{appUrl}/api/threads/callback</code></p></div>
-          <div><span>3</span><p>Request review/advanced access for <code>threads_basic</code> and <code>threads_keyword_search</code> before production use outside app roles.</p></div>
-          <div><span>4</span><p>Prepare a privacy policy, data-deletion instructions, reviewer credentials, use-case notes, and a permission-specific screen recording.</p></div>
+          <div><span>2</span><p><strong>OAuth redirect:</strong> <code>{appUrl}/api/threads/callback</code></p></div>
+          <div><span>3</span><p><strong>Uninstall callback:</strong> <code>{appUrl}/api/meta/deauthorize</code></p></div>
+          <div><span>4</span><p><strong>Delete callback:</strong> <code>{appUrl}/api/meta/data-deletion</code></p></div>
+          <div><span>5</span><p><strong>Privacy policy:</strong> <code>{appUrl}/privacy</code></p></div>
+          <div><span>6</span><p>Request review for <code>threads_basic</code> and <code>threads_keyword_search</code> with reviewer credentials, use-case notes, and a permission-specific screen recording.</p></div>
         </div>
-        <a className="text-link" href="https://developers.facebook.com/apps/" target="_blank" rel="noreferrer">Open Meta App Dashboard <ExternalLink size={14} /></a>
+        <div className="link-row">
+          <a className="text-link" href={`${appUrl}/privacy`} target="_blank" rel="noreferrer">Open privacy policy <ExternalLink size={14} /></a>
+          <a className="text-link" href={`${appUrl}/data-deletion`} target="_blank" rel="noreferrer">Open deletion instructions <ExternalLink size={14} /></a>
+          <a className="text-link" href="https://developers.facebook.com/apps/" target="_blank" rel="noreferrer">Open Meta App Dashboard <ExternalLink size={14} /></a>
+        </div>
       </section>
 
       <section className="phase-boundary">

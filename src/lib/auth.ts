@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getAdminEnv } from "@/lib/env";
+import { getAllowedEmails } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
 export async function getAdminUser() {
@@ -10,8 +10,7 @@ export async function getAdminUser() {
     return null;
   }
 
-  const adminEmail = getAdminEnv().ADMIN_EMAIL.toLowerCase();
-  if (data.user.email?.toLowerCase() !== adminEmail) {
+  if (!data.user.email || !getAllowedEmails().includes(data.user.email.toLowerCase())) {
     return null;
   }
 

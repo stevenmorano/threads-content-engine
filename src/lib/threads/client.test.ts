@@ -70,6 +70,7 @@ describe("searchThreads", () => {
 
     const [requestUrl] = fetchMock.mock.calls[0];
     const parsedUrl = new URL(String(requestUrl));
+    expect(parsedUrl.pathname).toBe("/v1.0/keyword_search");
     expect(parsedUrl.searchParams.get("fields")).toBe(
       "id,text,media_type,permalink,timestamp,username,has_replies,is_quote_post,is_reply",
     );

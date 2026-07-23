@@ -8,8 +8,8 @@ export function Brand({ compact = false }: { compact?: boolean }) {
       </span>
       {!compact ? (
         <span>
-          <strong>Signal Loom</strong>
-          <small>Threads research studio</small>
+          <strong>Threads Content Engine</strong>
+          <small>Research and approval studio</small>
         </span>
       ) : null}
     </div>

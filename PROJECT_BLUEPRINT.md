@@ -2,7 +2,7 @@
 
 Last verified: 2026-07-23
 
-The current interface uses **Signal Loom** as a working product label. The repository, Supabase project, and technical documentation use **Threads Content Engine**.
+The interface, repository, Supabase project, Meta app, and documentation use **Threads Content Engine**.
 
 ## Understanding summary
 
@@ -16,9 +16,9 @@ The current interface uses **Signal Loom** as a working product label. The repos
 
 ## Implementation checkpoint
 
-As of 2026-07-23, the Phase 1 application code, database migration, one-admin authentication, research configuration, manual search transport, persistence/ranking, AI analysis/generation, similarity gate, source provenance, and approval dashboard are implemented.
+As of 2026-07-23, the Phase 1 application code, database migrations, one-admin authentication, research configuration, manual search transport, persistence/ranking, AI analysis/generation, similarity gate, source provenance, approval dashboard, and Meta App Review callback/policy package are implemented.
 
-Local Supabase setup and the admin login have been verified. Meta app credentials, the token-encryption key, the Threads OAuth connection, the OpenAI key, and Vercel deployment remain operator setup tasks rather than missing application modules.
+Supabase authentication, Vercel deployment, the Meta app, and the Threads OAuth connection have been verified. Public keyword search is blocked until Meta approves `threads_keyword_search`, as documented by Meta. The App Review migration, server-only Supabase secret, privacy contact, reviewer account, review submission, and OpenAI usage controls remain operator steps.
 
 ## Verified Threads API capabilities
 
@@ -135,6 +135,7 @@ All user-owned tables include `user_id uuid references auth.users(id)`, have RLS
 | `drafts` | Body, status, generation metadata, max similarity, threshold, model/prompt version, timestamps. |
 | `draft_sources` | Provenance join between each draft and every source, including per-source similarity. |
 | `audit_events` | Append-only action history for connection, search, analysis, generation, edit, approval, rejection, and save-later events. |
+| `meta_data_deletion_requests` | Non-user-linked deletion receipt with a random confirmation code, hashed Threads identifier, status, and timestamps. Accessible only through the server-side secret. |
 
 Draft status is constrained to `pending`, `approved`, `rejected`, and `saved`. There is deliberately no `published` or `scheduled` transition in Phase 1.
 
@@ -193,7 +194,11 @@ Draft status is constrained to `pending`, `approved`, `rejected`, and `saved`. T
 | `NEXT_PUBLIC_APP_URL` | Browser-safe | Canonical origin used to build the exact OAuth callback URL. |
 | `NEXT_PUBLIC_SUPABASE_URL` | Browser-safe | Supabase project URL. |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Browser-safe | Supabase publishable key; authorization still relies on RLS. |
+| `SUPABASE_SECRET_KEY` | Server only | Dedicated `sb_secret_...` key used only by verified Meta callbacks and deletion-status rendering. |
 | `ADMIN_EMAIL` | Server only | Case-insensitive allowlist for the single administrator. |
+| `META_REVIEWER_EMAIL` | Server only | Optional dedicated reviewer login; receives an isolated RLS-scoped workspace. |
+| `PRIVACY_CONTACT_EMAIL` | Server-rendered public text | Public business contact required on the privacy/deletion pages before review. |
+| `APP_OPERATOR_NAME` | Server-rendered public text | Optional operator/business name shown in the privacy policy. |
 | `THREADS_APP_ID` | Server only | Meta Threads App ID. |
 | `THREADS_APP_SECRET` | Server only | Meta Threads App Secret. |
 | `THREADS_TOKEN_ENCRYPTION_KEY` | Server only | Base64-encoded 32-byte key for AES-256-GCM token encryption. |
@@ -208,7 +213,7 @@ Draft status is constrained to `pending`, `approved`, `rejected`, and `saved`. T
 | `CRON_SECRET` | 2 | Protect Vercel Cron route invocations. |
 | `N8N_WEBHOOK_SECRET` | 2, optional | Authenticate n8n-triggered jobs. |
 
-`SUPABASE_SERVICE_ROLE_KEY` is intentionally not required by the Phase 1 web path. Authenticated RLS-scoped requests are preferred. A service role may be added only for a tightly scoped future background worker.
+Authenticated RLS-scoped requests remain the default. The `SUPABASE_SECRET_KEY` bypasses RLS and is isolated to server-only modules for HMAC-verified Meta callbacks and opaque deletion-status receipts. It is never sent to the browser.
 
 ## Meta setup, permissions, and review
 
@@ -233,6 +238,17 @@ Meta's app roles/test users can be used while the app is in development mode. Pr
 - a screen recording showing the complete permission-specific flow;
 - successful API calls for each requested permission;
 - business or technology-provider verification if the Meta dashboard requires it for the account/use case.
+
+Implemented production endpoints:
+
+- OAuth redirect: `/api/threads/callback`
+- deauthorization callback: `/api/meta/deauthorize`
+- data-deletion callback: `/api/meta/data-deletion`
+- privacy policy: `/privacy`
+- deletion instructions: `/data-deletion`
+- opaque deletion status: `/data-deletion/status/{confirmationCode}`
+
+Both Meta callbacks verify the HMAC-SHA256 `signed_request` using the Threads App Secret. Deauthorization removes the encrypted connection. Data deletion calls a service-role-only Postgres function that atomically deletes all workspace rows associated with the connected Threads account while retaining the Supabase login record to prevent accidental lockout.
 
 Because Meta changes review gates and dashboard wording independently of endpoint documentation, confirm the exact checklist shown in the app's **App Review → Permissions and Features** screen immediately before submission.
 

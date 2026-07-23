@@ -3,8 +3,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Signal Loom",
-    template: "%s · Signal Loom",
+    default: "Threads Content Engine",
+    template: "%s · Threads Content Engine",
   },
   description:
     "A private research and approval workspace for original Threads content.",

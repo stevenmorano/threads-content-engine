@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { getAdminEnv } from "@/lib/env";
+import { getAllowedEmails } from "@/lib/env";
 import { messageUrl } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 
@@ -21,7 +21,7 @@ export async function loginAction(formData: FormData) {
     redirect(messageUrl("/login", "error", "Enter a valid email and password."));
   }
 
-  if (parsed.data.email.toLowerCase() !== getAdminEnv().ADMIN_EMAIL.toLowerCase()) {
+  if (!getAllowedEmails().includes(parsed.data.email.toLowerCase())) {
     redirect(messageUrl("/login", "error", "This account is not authorized."));
   }
 

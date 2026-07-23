@@ -1459,12 +1459,118 @@ th {
   font-size: 0.73rem;
 }
 
+.link-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 22px;
+}
+
 code {
   padding: 2px 4px;
   background: var(--paper-deep);
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 0.67rem;
   overflow-wrap: anywhere;
+}
+
+.policy-shell {
+  width: min(100% - 40px, 980px);
+  margin: 0 auto;
+  padding: 28px 0 80px;
+}
+
+.policy-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.policy-nav > div {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.policy-document {
+  margin-top: 32px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.policy-document > header {
+  padding: clamp(28px, 6vw, 64px);
+  border-bottom: 1px solid var(--line);
+}
+
+.policy-document h1 {
+  margin-top: 14px;
+}
+
+.policy-document > header p {
+  max-width: 700px;
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.policy-content {
+  padding: clamp(28px, 6vw, 64px);
+}
+
+.policy-content h2 {
+  margin: 32px 0 10px;
+}
+
+.policy-content h2:first-child {
+  margin-top: 0;
+}
+
+.policy-content p,
+.policy-content li {
+  color: var(--muted);
+}
+
+.policy-content a {
+  color: var(--forest-2);
+  font-weight: 750;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.policy-content ol {
+  display: grid;
+  gap: 8px;
+  padding-left: 24px;
+}
+
+.policy-status {
+  display: grid;
+  margin: 0;
+}
+
+.policy-status > div {
+  display: grid;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  grid-template-columns: 180px 1fr;
+}
+
+.policy-status dt {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.policy-status dd {
+  margin: 0;
+  font-weight: 700;
 }
 
 @media (max-width: 1120px) {
@@ -1584,6 +1690,18 @@ code {
   .library-foot {
     align-items: flex-start;
     flex-direction: column;
+  }
+  .policy-nav {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .policy-nav > div {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .policy-status > div {
+    gap: 5px;
+    grid-template-columns: 1fr;
   }
 }
 

@@ -8,6 +8,17 @@ const publicSchema = z.object({
 
 const adminSchema = z.object({
   ADMIN_EMAIL: z.email(),
+  META_REVIEWER_EMAIL: z.email().optional(),
+});
+
+const supabaseAdminSchema = z.object({
+  NEXT_PUBLIC_SUPABASE_URL: z.url(),
+  SUPABASE_SECRET_KEY: z.string().startsWith("sb_secret_"),
+});
+
+const privacySchema = z.object({
+  PRIVACY_CONTACT_EMAIL: z.email().optional(),
+  APP_OPERATOR_NAME: z.string().trim().min(1).default("Threads Content Engine"),
 });
 
 const threadsSchema = z.object({
@@ -41,7 +52,17 @@ export function getServerEnv() {
 }
 
 export function getAdminEnv() {
-  return adminSchema.parse({ ADMIN_EMAIL: process.env.ADMIN_EMAIL });
+  return adminSchema.parse({
+    ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+    META_REVIEWER_EMAIL: process.env.META_REVIEWER_EMAIL || undefined,
+  });
+}
+
+export function getAllowedEmails() {
+  const env = getAdminEnv();
+  return [env.ADMIN_EMAIL, env.META_REVIEWER_EMAIL]
+    .filter((email): email is string => Boolean(email))
+    .map((email) => email.toLowerCase());
 }
 
 export function getThreadsEnv() {
@@ -68,5 +89,19 @@ export function getSupabaseEnv() {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  });
+}
+
+export function getSupabaseAdminEnv() {
+  return supabaseAdminSchema.parse({
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY,
+  });
+}
+
+export function getPrivacyEnv() {
+  return privacySchema.parse({
+    PRIVACY_CONTACT_EMAIL: process.env.PRIVACY_CONTACT_EMAIL || undefined,
+    APP_OPERATOR_NAME: process.env.APP_OPERATOR_NAME || undefined,
   });
 }
