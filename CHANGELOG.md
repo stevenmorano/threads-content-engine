@@ -7,10 +7,12 @@ All notable project changes are recorded here. This project follows a phased pro
 ### Fixed
 
 - Send the short-lived Threads user token through Meta's required `access_token` parameter when exchanging it for a long-lived token.
+- Limit keyword-search fields to Meta's documented public-search response fields and explain permission code 10 as an App Review/testing restriction.
 
 ### Tests
 
 - Added a Threads OAuth regression test that verifies the exact long-lived-token request shape.
+- Added regression coverage for keyword-search field selection and permission-error messaging.
 - Added Vitest path-alias configuration matching the Next.js and TypeScript project aliases.
 
 ## 0.1.0 — 2026-07-23

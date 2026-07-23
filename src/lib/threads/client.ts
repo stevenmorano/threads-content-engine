@@ -9,21 +9,34 @@ const API_BASE = "https://graph.threads.net";
 const AUTH_BASE = "https://threads.net/oauth/authorize";
 const MEDIA_FIELDS = [
   "id",
-  "media_product_type",
+  "text",
   "media_type",
   "permalink",
-  "owner",
-  "username",
-  "text",
   "timestamp",
-  "shortcode",
-  "is_quote_post",
-  "quoted_post",
-  "reposted_post",
+  "username",
   "has_replies",
-  "alt_text",
-  "link_attachment_url",
+  "is_quote_post",
+  "is_reply",
 ].join(",");
+
+type ThreadsApiErrorBody = {
+  message?: string;
+  type?: string;
+  code?: number;
+  error_subcode?: number;
+  fbtrace_id?: string;
+};
+
+class ThreadsApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly details?: ThreadsApiErrorBody,
+  ) {
+    super(message);
+    this.name = "ThreadsApiError";
+  }
+}
 
 const shortTokenSchema = z.object({
   access_token: z.string(),
@@ -45,11 +58,16 @@ const profileSchema = z.object({
 async function readApiResponse(response: Response) {
   const body = await response.json().catch(() => null);
   if (!response.ok) {
-    const message =
+    const details =
       body && typeof body === "object" && "error" in body
-        ? JSON.stringify(body.error)
-        : `HTTP ${response.status}`;
-    throw new Error(`Threads API request failed: ${message}`);
+        ? (body.error as ThreadsApiErrorBody)
+        : undefined;
+    const message = details ? JSON.stringify(details) : `HTTP ${response.status}`;
+    throw new ThreadsApiError(
+      `Threads API request failed: ${message}`,
+      response.status,
+      details,
+    );
   }
   return body;
 }
@@ -124,5 +142,14 @@ export async function searchThreads(
     headers: { Authorization: `Bearer ${accessToken}` },
     cache: "no-store",
   });
-  return threadsSearchResponseSchema.parse(await readApiResponse(response));
+  try {
+    return threadsSearchResponseSchema.parse(await readApiResponse(response));
+  } catch (error) {
+    if (error instanceof ThreadsApiError && error.details?.code === 10) {
+      throw new Error(
+        "Meta blocked this search because the app does not have approved public keyword-search access. During testing, Meta limits search to posts owned by the connected Threads account. Request App Review for threads_keyword_search to search public posts.",
+      );
+    }
+    throw error;
+  }
 }

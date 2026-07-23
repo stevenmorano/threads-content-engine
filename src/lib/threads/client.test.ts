@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { exchangeCodeForLongLivedToken } from "./client";
+import { exchangeCodeForLongLivedToken, searchThreads } from "./client";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -50,5 +50,54 @@ describe("exchangeCodeForLongLivedToken", () => {
       userId: "123",
       profile: { username: "adhdsteve" },
     });
+  });
+});
+
+describe("searchThreads", () => {
+  it("requests only fields documented for keyword-search results", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(
+      Response.json({
+        data: [{
+          id: "post-123",
+          text: "ADHD productivity",
+          username: "adhdsteve",
+        }],
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await searchThreads("access-token", "ADHD productivity", "TOP");
+
+    const [requestUrl] = fetchMock.mock.calls[0];
+    const parsedUrl = new URL(String(requestUrl));
+    expect(parsedUrl.searchParams.get("fields")).toBe(
+      "id,text,media_type,permalink,timestamp,username,has_replies,is_quote_post,is_reply",
+    );
+    expect(parsedUrl.searchParams.get("fields")).not.toContain("owner");
+  });
+
+  it("explains Meta's unapproved public-search restriction", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>().mockResolvedValueOnce(
+        Response.json(
+          {
+            error: {
+              message: "Application does not have permission for this action",
+              type: "THApiException",
+              code: 10,
+              fbtrace_id: "trace-id",
+            },
+          },
+          { status: 400 },
+        ),
+      ),
+    );
+
+    await expect(
+      searchThreads("access-token", "ADHD productivity", "TOP"),
+    ).rejects.toThrow(
+      "Meta blocked this search because the app does not have approved public keyword-search access.",
+    );
   });
 });
