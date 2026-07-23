@@ -2,6 +2,17 @@
 
 All notable project changes are recorded here. This project follows a phased product roadmap rather than semantic-versioned public releases during initial development.
 
+## Unreleased
+
+### Fixed
+
+- Send the short-lived Threads user token through Meta's required `access_token` parameter when exchanging it for a long-lived token.
+
+### Tests
+
+- Added a Threads OAuth regression test that verifies the exact long-lived-token request shape.
+- Added Vitest path-alias configuration matching the Next.js and TypeScript project aliases.
+
 ## 0.1.0 — 2026-07-23
 
 ### Added

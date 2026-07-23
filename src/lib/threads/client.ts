@@ -87,9 +87,9 @@ export async function exchangeCodeForLongLivedToken(code: string) {
   const longParams = new URLSearchParams({
     grant_type: "th_exchange_token",
     client_secret: threadsEnv.THREADS_APP_SECRET,
+    access_token: shortToken.access_token,
   });
   const longResponse = await fetch(`${API_BASE}/access_token?${longParams}`, {
-    headers: { Authorization: `Bearer ${shortToken.access_token}` },
     cache: "no-store",
   });
   const longToken = longTokenSchema.parse(await readApiResponse(longResponse));
